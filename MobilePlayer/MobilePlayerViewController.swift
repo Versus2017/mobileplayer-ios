@@ -175,7 +175,7 @@ open class MobilePlayerViewController: MPMoviePlayerViewController {
         if let navigationController = slf.navigationController {
           navigationController.popViewController(animated: true)
         } else if let presentingController = slf.presentingViewController {
-          presentingController.dismissMoviePlayerViewControllerAnimated()
+            presentingController.dismiss(animated: true, completion: nil)
         }
       },
       forControlEvents: .touchUpInside)
