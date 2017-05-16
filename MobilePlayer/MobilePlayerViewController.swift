@@ -28,6 +28,9 @@ open class MobilePlayerViewController: MPMoviePlayerViewController {
 
     /// The video is currently paused.
     case paused
+    
+    /// The video is loading
+    case loading
   }
 
   /// The previous value of `state`. Default is `.Idle`.
@@ -40,6 +43,9 @@ open class MobilePlayerViewController: MPMoviePlayerViewController {
     }
   }
 
+    // Whether the video is forced to pause by user (click the play button will force the video paused)
+    public var isForcedToPause: Bool = false
+    
   // MARK: Player Configuration
 
   // TODO: Move inside MobilePlayerConfig
@@ -198,7 +204,12 @@ open class MobilePlayerViewController: MPMoviePlayerViewController {
           return
         }
         slf.resetHideControlsTimer()
-        slf.state == .playing ? slf.pause() : slf.play()
+        if slf.state == .playing {
+            slf.isForcedToPause = true
+            slf.pause()
+        } else {
+            slf.play()
+        }
       },
       forControlEvents: .touchUpInside)
 
@@ -566,6 +577,7 @@ open class MobilePlayerViewController: MPMoviePlayerViewController {
     state = StateHelper.calculateStateUsing(previousState: previousState, andPlaybackState: moviePlayer.playbackState)
     let playButton = getViewForElementWithIdentifier("play") as? ToggleButton
     if state == .playing {
+      isForcedToPause = false
       doFirstPlaySetupIfNeeded()
       playButton?.toggled = true
       if !controlsView.controlsHidden {
@@ -575,6 +587,12 @@ open class MobilePlayerViewController: MPMoviePlayerViewController {
       pauseOverlayViewController?.dismiss()
       postrollViewController?.dismiss()
     } else {
+      if state == .paused,
+        !isForcedToPause,
+        moviePlayer.duration - moviePlayer.currentPlaybackTime > 0.1  {
+        state = .loading
+      }
+      isForcedToPause = false
       playButton?.toggled = false
       hideControlsTimer?.invalidate()
       controlsView.controlsHidden = false
